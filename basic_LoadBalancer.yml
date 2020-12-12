@@ -1,0 +1,24 @@
+- hosts: ActualWebServer
+  tasks:
+  - package:
+      name: "httpd"
+      state: present
+  - copy:
+      dest: "/var/www/html/index.html"
+      content: "Actual Web Server hjkert"
+  - service:
+      name: httpd
+      state: restarted
+
+- hosts: MyLoadBalancer
+  tasks:
+  - name: "Install load balancer software"
+    package:
+      name: "haproxy"
+  - template:
+      dest: "/etc/haproxy"
+      src: "haproxy.cfg"
+  - service:
+      name: haproxy
+      state: restarted
+

@@ -1,0 +1,74 @@
+- hosts: ActualWebServer
+  tasks:
+  - name: "Create Directory"
+    file:
+     state: directory
+     path: /dvd1
+  - name: "Mount CDROM to directory"
+    mount:
+     src: /dev/sr0
+     path: /dvd1
+     state: mounted
+     fstype: iso9660
+  - name: "Configure Yum"
+    yum_repository:
+     baseurl: "/dvd1/AppStream"
+     name: mydvd1
+     description: My dvd
+     gpgcheck: no
+  - name: "Configure Yum"
+    yum_repository:
+     baseurl: "/dvd1/BaseOS"
+     name: mydvd2
+     description: My dvd
+     gpgcheck: no
+  - name: "Install Httpd software"
+    package:
+     name: "httpd"
+     state: present
+  - name: "Copy web pages"
+    copy:
+      dest: "/var/www/html/index.html"
+      content: "Web server using Load Balancer"
+  - name: "Start Httpd service"
+    service:
+      name: httpd
+      state: started
+  - name: "Disable firewall for port number"
+    firewalld:
+      port: "80/tcp"
+      state: enabled
+      permanent: no
+      immediate: yes
+
+
+
+
+- hosts: MyLoadBalancer
+  tasks:
+  - name: "Install load balancer software"
+    package:
+      name: "haproxy"
+      state: present
+  - name: "Start Haproxy"
+    service:
+      name: haproxy
+      state: started
+  - name: "Copy configuration file"
+    template:
+      dest: "/etc/haproxy/haproxy.cfg"
+      src: "haproxy.cfg.j2"
+    notify: restart haproxy
+  - name: "Disable firewall for port number"
+    firewalld:
+      port: "8080/tcp"
+      state: enabled
+      permanent: no
+      immediate: yes
+
+  handlers:
+  - name: restart haproxy
+    service:
+     name: httpd
+     state: restarted
+     enabled: no
