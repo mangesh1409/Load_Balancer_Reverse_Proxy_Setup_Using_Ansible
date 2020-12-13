@@ -69,6 +69,6 @@
   handlers:
   - name: restart haproxy
     service:
-     name: httpd
+     name: haproxy
      state: restarted
      enabled: no
